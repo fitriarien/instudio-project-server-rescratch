@@ -83,7 +83,10 @@ public class ImageServiceImpl implements ImageService {
     @Override
     @Transactional(readOnly = true)
     public ImageResponse get(String imageId) {
-        return null;
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Image not found"));
+
+        return toImageResponse(image);
     }
 
     @Override

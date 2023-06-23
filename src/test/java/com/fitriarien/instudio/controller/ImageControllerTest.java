@@ -355,4 +355,60 @@ class ImageControllerTest {
             assertEquals("DELETED", response.getData());
         });
     }
+
+    @Test
+    void testGetImageNotFound() throws Exception{
+        UserDetails userDetails = authService.loadUserByUsername("admin1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+
+        mockMvc.perform(
+                get("/api/images/wrongImageId")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isNotFound()
+        ).andDo(result -> {
+            GenerateResponse<ImageResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNotNull(response.getErrors());
+        });
+    }
+
+    @Test
+    void testGetImageSuccess() throws Exception{
+        UserDetails userDetails = authService.loadUserByUsername("admin1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+
+        User user = userRepository.findByUsername("admin1");
+        Product product = productRepository.findByProductName("Kitchen Set A");
+
+        Image image = new Image();
+        image.setImageId(UUID.randomUUID().toString());
+        image.setImageAlt("kitchen-set-A");
+        image.setImagePath("www.example.com");
+        image.setImageStatus(1L);
+        image.setProduct(product);
+        image.setUser(user);
+        imageRepository.save(image);
+
+        mockMvc.perform(
+                get("/api/images/" + image.getImageId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isOk()
+        ).andDo(result -> {
+            GenerateResponse<ImageResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNull(response.getErrors());
+            assertEquals(image.getImageId(), response.getData().getImageId());
+            assertEquals(image.getImageAlt(), response.getData().getImageAlt());
+            assertEquals(image.getImagePath(), response.getData().getImagePath());
+            assertEquals(image.getImageStatus(), response.getData().getImageStatus());
+            assertEquals(image.getProduct().getProductId(), response.getData().getProductId());
+            assertEquals(image.getUser().getId(), response.getData().getUserId());
+        });
+    }
 }

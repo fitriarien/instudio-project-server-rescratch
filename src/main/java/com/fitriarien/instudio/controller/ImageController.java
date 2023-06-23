@@ -35,4 +35,13 @@ public class ImageController {
         imageService.delete(imageId, userId);
         return GenerateResponse.<String>builder().data("DELETED").build();
     }
+
+    @GetMapping(
+            path = "/api/images/{imageId}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public GenerateResponse<ImageResponse> get(@PathVariable("imageId") String imageId) {
+        ImageResponse imageResponse = imageService.get(imageId);
+        return GenerateResponse.<ImageResponse>builder().data(imageResponse).build();
+    }
 }
