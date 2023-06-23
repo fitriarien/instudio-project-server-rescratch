@@ -418,7 +418,7 @@ class ImageControllerTest {
         String token = jwtTokenUtil.generateToken(userDetails);
 
         mockMvc.perform(
-                get("/api/images")
+                get("/api/images/list")
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -451,7 +451,7 @@ class ImageControllerTest {
         }
 
         mockMvc.perform(
-                get("/api/images")
+                get("/api/images/list")
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -462,6 +462,76 @@ class ImageControllerTest {
             });
             assertNull(responses.getErrors());
             assertEquals(10, responses.getData().size());
+        });
+    }
+
+    @Test
+    void testGetImagesByPageEmpty() throws Exception{
+        UserDetails userDetails = authService.loadUserByUsername("admin1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+
+        mockMvc.perform(
+                get("/api/images")
+                        .queryParam("page", "0")
+                        .queryParam("size", "10")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isNoContent()
+        ).andDo(result -> {
+            GenerateResponse<List<ImageResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNotNull(responses.getErrors());
+        });
+    }
+
+    @Test
+    void testGetImagesByPageSuccess() throws Exception{
+        UserDetails userDetails = authService.loadUserByUsername("admin1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+
+        User user = userRepository.findByUsername("admin1");
+        Product product = productRepository.findByProductName("Kitchen Set A");
+
+        Image image = new Image();
+        for (int i = 0; i < 15; i++) {
+            image.setImageId(UUID.randomUUID().toString());
+            image.setImageAlt("kitchen-set-" + (i+1));
+            image.setImagePath("www.example" + (i+1) + ".com");
+            image.setImageStatus(1L);
+            image.setProduct(product);
+            image.setUser(user);
+            imageRepository.save(image);
+        }
+
+        for (int i = 0; i < 5; i++) {
+            image.setImageId(UUID.randomUUID().toString());
+            image.setImageAlt("kitchen-set-" + (i+16));
+            image.setImagePath("www.example" + (i+16) + ".com");
+            image.setImageStatus(0L);
+            image.setProduct(product);
+            image.setUser(user);
+            imageRepository.save(image);
+        }
+
+        mockMvc.perform(
+                get("/api/images")
+                        .queryParam("page", "1")
+                        .queryParam("size", "10")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isOk()
+        ).andDo(result -> {
+            GenerateResponse<List<ImageResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNull(responses.getErrors());
+            assertEquals(5, responses.getData().size());
+            assertEquals(1, responses.getPaging().getCurrentPage());
+            assertEquals(2, responses.getPaging().getTotalPage());
+            assertEquals(10, responses.getPaging().getSize());
         });
     }
 }

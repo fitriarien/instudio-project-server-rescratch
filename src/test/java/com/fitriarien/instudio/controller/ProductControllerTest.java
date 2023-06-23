@@ -579,7 +579,7 @@ class ProductControllerTest {
     }
 
     @Test
-    void testGetByPageOfProductsSuccess() throws Exception{
+    void testGetProductsByPageSuccess() throws Exception{
         UserDetails userDetails = authService.loadUserByUsername("admin1");
         String token = jwtTokenUtil.generateToken(userDetails);
 

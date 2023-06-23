@@ -12,7 +12,12 @@ import com.fitriarien.instudio.service.ImageService;
 import com.fitriarien.instudio.service.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -106,8 +111,22 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ImageResponse> getByPage() {
-        return null;
+    public Page<ImageResponse> getByPage(int page, int size) {
+        Specification<Image> specification = Specification.where((root, query, criteriaBuilder) ->
+                criteriaBuilder.notEqual(root.get("imageStatus"), 0));
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Image> images = imageRepository.findAll(specification, pageable);
+
+        if (images.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "No Content");
+        }
+
+        List<ImageResponse> imageResponses = images.getContent()
+                .stream()
+                .map(this::toImageResponse)
+                .collect(Collectors.toList());
+        return new PageImpl<>(imageResponses, pageable, images.getTotalElements());
     }
 
     private ImageResponse toImageResponse(Image image) {

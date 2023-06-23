@@ -15,5 +15,5 @@ public interface ImageService {
 
     List<ImageResponse> getList();
 
-    Page<ImageResponse> getByPage();
+    Page<ImageResponse> getByPage(int page, int size);
 }
