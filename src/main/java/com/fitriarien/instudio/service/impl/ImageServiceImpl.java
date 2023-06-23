@@ -17,7 +17,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -49,7 +48,7 @@ public class ImageServiceImpl implements ImageService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Unauthorized"));
 
-        if (!user.getRole().equalsIgnoreCase("admin") && user.getStatus() == 0) {
+        if (!user.getRole().equalsIgnoreCase("admin") || user.getStatus() == 0) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have permission to upload image.");
         }
 
