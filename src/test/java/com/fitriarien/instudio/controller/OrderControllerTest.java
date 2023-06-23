@@ -93,7 +93,7 @@ class OrderControllerTest {
     @AfterEach
     void tearDown() {
         orderRepository.deleteAll();
-//        userRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test

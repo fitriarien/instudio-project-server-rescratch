@@ -4,7 +4,6 @@ import com.fitriarien.instudio.entity.Order;
 import com.fitriarien.instudio.entity.User;
 import com.fitriarien.instudio.model.request.CreateOrderRequest;
 import com.fitriarien.instudio.model.response.OrderResponse;
-import com.fitriarien.instudio.model.response.UserResponse;
 import com.fitriarien.instudio.repository.OrderRepository;
 import com.fitriarien.instudio.repository.UserRepository;
 import com.fitriarien.instudio.service.OrderService;
