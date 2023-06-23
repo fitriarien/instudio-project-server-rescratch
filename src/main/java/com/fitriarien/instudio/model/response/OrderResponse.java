@@ -29,7 +29,5 @@ public class OrderResponse {
 
     private Long orderStatus;
 
-    private User user;
-
     private List<OrderDetail> orderDetailList;
 }
