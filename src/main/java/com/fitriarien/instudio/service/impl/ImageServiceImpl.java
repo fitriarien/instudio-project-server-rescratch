@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ImageServiceImpl implements ImageService {
@@ -92,7 +93,15 @@ public class ImageServiceImpl implements ImageService {
     @Override
     @Transactional(readOnly = true)
     public List<ImageResponse> getList() {
-        return null;
+        List<Image> images = imageRepository.findAll();
+        if (images.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "No Content");
+        }
+
+        return images.stream()
+                .filter(image -> image.getImageStatus() != 0)
+                .map(this::toImageResponse)
+                .collect(Collectors.toList());
     }
 
     @Override

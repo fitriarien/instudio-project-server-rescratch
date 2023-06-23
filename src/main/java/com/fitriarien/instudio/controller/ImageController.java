@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @CrossOrigin("*")
 public class ImageController {
@@ -43,5 +45,14 @@ public class ImageController {
     public GenerateResponse<ImageResponse> get(@PathVariable("imageId") String imageId) {
         ImageResponse imageResponse = imageService.get(imageId);
         return GenerateResponse.<ImageResponse>builder().data(imageResponse).build();
+    }
+
+    @GetMapping(
+            path = "/api/images",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public GenerateResponse<List<ImageResponse>> getList() {
+        List<ImageResponse> imageResponses = imageService.getList();
+        return GenerateResponse.<List<ImageResponse>>builder().data(imageResponses).build();
     }
 }

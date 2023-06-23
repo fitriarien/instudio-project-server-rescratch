@@ -23,10 +23,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -409,6 +409,59 @@ class ImageControllerTest {
             assertEquals(image.getImageStatus(), response.getData().getImageStatus());
             assertEquals(image.getProduct().getProductId(), response.getData().getProductId());
             assertEquals(image.getUser().getId(), response.getData().getUserId());
+        });
+    }
+
+    @Test
+    void testGetImageEmptyList() throws Exception{
+        UserDetails userDetails = authService.loadUserByUsername("admin1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+
+        mockMvc.perform(
+                get("/api/images")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isNoContent()
+        ).andDo(result -> {
+            GenerateResponse<List<ImageResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNotNull(responses.getErrors());
+        });
+    }
+
+    @Test
+    void testGetImageListSuccess() throws Exception{
+        UserDetails userDetails = authService.loadUserByUsername("admin1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+
+        User user = userRepository.findByUsername("admin1");
+        Product product = productRepository.findByProductName("Kitchen Set A");
+
+        Image image = new Image();
+        for (int i = 0; i < 10; i++) {
+            image.setImageId(UUID.randomUUID().toString());
+            image.setImageAlt("kitchen-set-" + (i+1));
+            image.setImagePath("www.example" + (i+1) + ".com");
+            image.setImageStatus(1L);
+            image.setProduct(product);
+            image.setUser(user);
+            imageRepository.save(image);
+        }
+
+        mockMvc.perform(
+                get("/api/images")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isOk()
+        ).andDo(result -> {
+            GenerateResponse<List<ImageResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNull(responses.getErrors());
+            assertEquals(10, responses.getData().size());
         });
     }
 }
