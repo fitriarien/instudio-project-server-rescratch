@@ -51,7 +51,7 @@ public class AuthController {
 			path = "/api/auth/logout",
 			produces = MediaType.APPLICATION_JSON_VALUE
 	)
-	public GenerateResponse<String> logout(HttpServletRequest request) {
+	public GenerateResponse<String> logout(@RequestBody HttpServletRequest request) {
 		String token = jwtBlacklistFilter.extractToken(request);
 		tokenBlacklistService.addToBlacklist(token);
 		return GenerateResponse.<String>builder().data("success").build();

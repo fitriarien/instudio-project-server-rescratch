@@ -1,6 +1,5 @@
 package com.fitriarien.instudio.configuration;
 
-import com.fitriarien.instudio.service.AuthService;
 import com.fitriarien.instudio.service.impl.AuthServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -6,7 +6,6 @@ import com.fitriarien.instudio.model.response.TokenResponse;
 import com.fitriarien.instudio.model.response.UserResponse;
 import com.fitriarien.instudio.model.request.RegisterUserRequest;
 import com.fitriarien.instudio.model.request.LoginUserRequest;
-import com.fitriarien.instudio.model.JwtToken;
 import com.fitriarien.instudio.repository.UserRepository;
 import com.fitriarien.instudio.service.AuthService;
 import com.fitriarien.instudio.service.ValidationService;
@@ -180,13 +179,13 @@ public class AuthServiceImpl implements UserDetailsService, AuthService {
 		// load and set userDetails
 		final UserDetails userDetails = loadUserByUsername(request.getUsername());
 		// load and set token
-		final JwtToken jwtToken = new JwtToken(jwtTokenUtil.generateToken(userDetails));
+		// final JwtToken jwtToken = new JwtToken(jwtTokenUtil.generateToken(userDetails));
 
 		return TokenResponse.builder()
 				.id(user.getId())
 				.username(user.getUsername())
 				.name(user.getName())
-				.token(jwtToken.getToken())
+				.token(jwtTokenUtil.generateToken(userDetails))
 				.role(user.getRole())
 				.status(user.getStatus())
 				.build();

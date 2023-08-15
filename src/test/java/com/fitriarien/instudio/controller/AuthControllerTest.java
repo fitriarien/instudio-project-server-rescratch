@@ -80,8 +80,8 @@ class AuthControllerTest {
         ).andExpect(
                 status().isBadRequest()
         ).andDo(result -> {
-            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
-            });
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(),
+                    new TypeReference<>() {});
 
             assertNotNull(response.getErrors());
         });
