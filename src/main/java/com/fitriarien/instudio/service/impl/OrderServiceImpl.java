@@ -62,6 +62,10 @@ public class OrderServiceImpl implements OrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
+        if (user.getStatus() == 0) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have permission to create product.");
+        }
+
         List<Order> orders = orderRepository.findByUserId(userId);
         if (orders.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Data not found");
@@ -74,6 +78,22 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return orderResponses;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderResponse get(String userId, String orderId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (user.getStatus() == 0) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have permission to create product.");
+        }
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        return toOrderResponse(order);
     }
 
     private String handleOrderCode() {
