@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @CrossOrigin("*")
 public class OrderController {
@@ -24,5 +26,14 @@ public class OrderController {
                                                   @RequestBody CreateOrderRequest request) {
         OrderResponse orderResponse = orderService.create(userId, request);
         return GenerateResponse.<OrderResponse>builder().data(orderResponse).build();
+    }
+
+    @GetMapping(
+            path = "/api/orders/users/{userId}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public GenerateResponse<List<OrderResponse>> getOrderByUser(@PathVariable("userId") String userId) {
+        List<OrderResponse> orderResponses = orderService.getOrderByUser(userId);
+        return GenerateResponse.<List<OrderResponse>>builder().data(orderResponses).build();
     }
 }

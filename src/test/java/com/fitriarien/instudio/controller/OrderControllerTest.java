@@ -24,9 +24,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -65,17 +67,6 @@ class OrderControllerTest {
         user.setAddress("Jakarta");
         user.setStatus(1L);
         userRepository.save(user);
-
-        Order order = new Order();
-        order.setOrderId(UUID.randomUUID().toString());
-        order.setOrderCode("TR1");
-        order.setOrderDate("2023-06-23 18:32:30");
-        order.setVisitSchedule("2023-07-02 10:00:00");
-        order.setVisitAddress("Jakarta");
-        order.setOrderAmount(0D);
-        order.setOrderStatus(0L);
-        order.setUser(user);
-        orderRepository.save(order);
 
         user = new User();
         user.setId(UUID.randomUUID().toString());
@@ -204,6 +195,102 @@ class OrderControllerTest {
             assertEquals(request.getVisitSchedule(), response.getData().getVisitSchedule());
             assertEquals(0, response.getData().getOrderStatus());
             assertEquals(0, response.getData().getOrderAmount());
+        });
+    }
+
+    @Test
+    void testGetOrderByUserNotFoundUser() throws Exception {
+        UserDetails userDetails = authService.loadUserByUsername("person1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+
+        mockMvc.perform(
+                get("/api/orders/users/wrongId")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isNotFound()
+        ).andDo(result -> {
+            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNotNull(responses.getErrors());
+        });
+    }
+
+    @Test
+    void testGetOrderByUserEmpty() throws Exception {
+        UserDetails userDetails = authService.loadUserByUsername("person1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+        User user = userRepository.findByUsername("person1");
+
+        mockMvc.perform(
+                get("/api/orders/users/" + user.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isNoContent()
+        ).andDo(result -> {
+            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNotNull(responses.getErrors());
+        });
+    }
+
+    @Test
+    void testGetOrderByUserSuccess() throws Exception {
+        UserDetails userDetails = authService.loadUserByUsername("person1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+        User user = userRepository.findByUsername("person1");
+
+        Order order = new Order();
+        order.setOrderId(UUID.randomUUID().toString());
+        order.setOrderCode("TR1");
+        order.setOrderDate("2023-06-23 18:32:30");
+        order.setVisitSchedule("2023-07-02 10:00:00");
+        order.setVisitAddress("Jakarta");
+        order.setOrderAmount(0D);
+        order.setOrderStatus(0L);
+        order.setUser(user);
+        orderRepository.save(order);
+
+        mockMvc.perform(
+                get("/api/orders/users/" + user.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isOk()
+        ).andDo(result -> {
+            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNull(responses.getErrors());
+            assertEquals(1, responses.getData().stream().count());
+        });
+
+        order = new Order();
+        order.setOrderId(UUID.randomUUID().toString());
+        order.setOrderCode("TR2");
+        order.setOrderDate("2023-08-15 18:32:30");
+        order.setVisitSchedule("2023-08-22 10:00:00");
+        order.setVisitAddress("Jakarta");
+        order.setOrderAmount(0D);
+        order.setOrderStatus(0L);
+        order.setUser(user);
+        orderRepository.save(order);
+
+        mockMvc.perform(
+                get("/api/orders/users/" + user.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isOk()
+        ).andDo(result -> {
+            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNull(responses.getErrors());
+            assertEquals(2, responses.getData().stream().count());
         });
     }
 }

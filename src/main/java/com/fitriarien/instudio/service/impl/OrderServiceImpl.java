@@ -16,6 +16,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -52,6 +54,26 @@ public class OrderServiceImpl implements OrderService {
 
         orderRepository.save(order);
         return toOrderResponse(order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getOrderByUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        List<Order> orders = orderRepository.findByUserId(userId);
+        if (orders.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Data not found");
+        }
+
+        List<OrderResponse> orderResponses = new ArrayList<>();
+        for (Order order : orders) {
+            OrderResponse orderResponse = toOrderResponse(order);
+            orderResponses.add(orderResponse);
+        }
+
+        return orderResponses;
     }
 
     private String handleOrderCode() {
