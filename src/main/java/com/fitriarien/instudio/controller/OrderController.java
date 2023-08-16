@@ -3,8 +3,10 @@ package com.fitriarien.instudio.controller;
 import com.fitriarien.instudio.model.request.CreateOrderRequest;
 import com.fitriarien.instudio.model.response.GenerateResponse;
 import com.fitriarien.instudio.model.response.OrderResponse;
+import com.fitriarien.instudio.model.response.PagingResponse;
 import com.fitriarien.instudio.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,5 +56,23 @@ public class OrderController {
     public GenerateResponse<List<OrderResponse>> getOrders(@PathVariable("userId") String userId) {
         List<OrderResponse> orderResponses = orderService.getOrders(userId);
         return GenerateResponse.<List<OrderResponse>>builder().data(orderResponses).build();
+    }
+
+    @GetMapping(
+            path = "/api/orders/pageable/users/{userId}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public GenerateResponse<List<OrderResponse>> getOrdersByPage(@PathVariable("userId") String userId,
+                                                                 @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+                                                                 @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
+        Page<OrderResponse> orderResponses = orderService.getOrdersByPage(userId, page, size);
+        return GenerateResponse.<List<OrderResponse>>builder()
+                .data(orderResponses.getContent())
+                .paging(PagingResponse.builder()
+                        .currentPage(orderResponses.getNumber())
+                        .totalPage(orderResponses.getTotalPages())
+                        .size(orderResponses.getSize())
+                        .build())
+                .build();
     }
 }

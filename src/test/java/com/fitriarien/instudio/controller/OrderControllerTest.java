@@ -107,7 +107,7 @@ class OrderControllerTest {
         ).andExpect(
                 status().isBadRequest()
         ).andDo(result -> {
-            GenerateResponse<OrderResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
             });
             assertNotNull(response.getErrors());
         });
@@ -131,7 +131,7 @@ class OrderControllerTest {
         ).andExpect(
                 status().isNotFound()
         ).andDo(result -> {
-            GenerateResponse<OrderResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
             });
             assertNotNull(response.getErrors());
         });
@@ -157,7 +157,7 @@ class OrderControllerTest {
         ).andExpect(
                 status().isForbidden()
         ).andDo(result -> {
-            GenerateResponse<OrderResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
             });
             assertNotNull(response.getErrors());
         });
@@ -190,7 +190,7 @@ class OrderControllerTest {
 
             assertNotNull(response.getData().getOrderId());
             assertNotNull(response.getData().getOrderDate());
-            assertEquals("TR2", response.getData().getOrderCode());
+            assertEquals("TR1", response.getData().getOrderCode());
             assertEquals(request.getVisitAddress(), response.getData().getVisitAddress());
             assertEquals(request.getVisitSchedule(), response.getData().getVisitSchedule());
             assertEquals(0, response.getData().getOrderStatus());
@@ -211,9 +211,9 @@ class OrderControllerTest {
         ).andExpect(
                 status().isNotFound()
         ).andDo(result -> {
-            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
             });
-            assertNotNull(responses.getErrors());
+            assertNotNull(response.getErrors());
         });
     }
 
@@ -232,9 +232,9 @@ class OrderControllerTest {
         ).andExpect(
                 status().isForbidden()
         ).andDo(result -> {
-            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
             });
-            assertNotNull(responses.getErrors());
+            assertNotNull(response.getErrors());
         });
     }
 
@@ -340,7 +340,7 @@ class OrderControllerTest {
         ).andExpect(
                 status().isNotFound()
         ).andDo(result -> {
-            GenerateResponse<OrderResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
             });
             assertNotNull(response.getErrors());
         });
@@ -371,7 +371,7 @@ class OrderControllerTest {
         ).andExpect(
                 status().isForbidden()
         ).andDo(result -> {
-            GenerateResponse<OrderResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
             });
             assertNotNull(response.getErrors());
         });
@@ -402,7 +402,7 @@ class OrderControllerTest {
         ).andExpect(
                 status().isNotFound()
         ).andDo(result -> {
-            GenerateResponse<OrderResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
             });
             assertNotNull(response.getErrors());
         });
@@ -459,9 +459,9 @@ class OrderControllerTest {
         ).andExpect(
                 status().isNotFound()
         ).andDo(result -> {
-            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
             });
-            assertNotNull(responses.getErrors());
+            assertNotNull(response.getErrors());
         });
     }
 
@@ -479,9 +479,9 @@ class OrderControllerTest {
         ).andExpect(
                 status().isForbidden()
         ).andDo(result -> {
-            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
             });
-            assertNotNull(responses.getErrors());
+            assertNotNull(response.getErrors());
         });
     }
 
@@ -499,9 +499,9 @@ class OrderControllerTest {
         ).andExpect(
                 status().isNoContent()
         ).andDo(result -> {
-            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
             });
-            assertNotNull(responses.getErrors());
+            assertNotNull(response.getErrors());
         });
     }
 
@@ -536,6 +536,139 @@ class OrderControllerTest {
             });
             assertNull(responses.getErrors());
             assertEquals(10, responses.getData().size());
+        });
+    }
+
+    @Test
+    void testGetOrdersByPageNotFoundUser() throws Exception{
+        UserDetails userDetails = authService.loadUserByUsername("admin1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+
+        mockMvc.perform(
+                get("/api/orders/pageable/users/wrongId")
+                        .queryParam("page", "1")
+                        .queryParam("size", "10")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isNotFound()
+        ).andDo(result -> {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNotNull(response.getErrors());
+        });
+    }
+
+    @Test
+    void testGetOrdersByPageForbiddenUser() throws Exception{
+        UserDetails userDetails = authService.loadUserByUsername("admin1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+        User user = userRepository.findByUsername("admin1");
+
+        mockMvc.perform(
+                get("/api/orders/pageable/users/"+user.getId())
+                        .queryParam("page", "1")
+                        .queryParam("size", "10")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isForbidden()
+        ).andDo(result -> {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNotNull(response.getErrors());
+        });
+    }
+
+    @Test
+    void testGetOrdersByPageEmpty() throws Exception{
+        UserDetails userDetails = authService.loadUserByUsername("person1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+        User user = userRepository.findByUsername("person1");
+
+        mockMvc.perform(
+                get("/api/orders/pageable/users/"+user.getId())
+                        .queryParam("page", "1")
+                        .queryParam("size", "10")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isNoContent()
+        ).andDo(result -> {
+            GenerateResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNotNull(response.getErrors());
+        });
+    }
+
+    @Test
+    void testGetOrdersByPageSuccess() throws Exception{
+        UserDetails userDetails = authService.loadUserByUsername("person1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+        User user = userRepository.findByUsername("person1");
+
+        Order order = new Order();
+        for (int i = 0; i < 10; i++) {
+            order.setOrderId(UUID.randomUUID().toString());
+            order.setOrderCode("TR" + (i+1));
+            order.setOrderDate("2023-06-23 09:32:30");
+            order.setVisitSchedule("2023-07-02 10:00:00");
+            order.setVisitAddress("Jakarta");
+            order.setOrderAmount(0D);
+            order.setOrderStatus(0L);
+            order.setUser(user);
+            orderRepository.save(order);
+        }
+
+        for (int i = 0; i < 5; i++) {
+            order.setOrderId(UUID.randomUUID().toString());
+            order.setOrderCode("TR" + (i+11));
+            order.setOrderDate("2023-08-16 09:32:30");
+            order.setVisitSchedule("2023-08-27 09:00:00");
+            order.setVisitAddress("Tangerang");
+            order.setOrderAmount(0D);
+            order.setOrderStatus(0L);
+            order.setUser(user);
+            orderRepository.save(order);
+        }
+
+        mockMvc.perform(
+                get("/api/orders/pageable/users/"+user.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isOk()
+        ).andDo(result -> {
+            GenerateResponse<List<OrderResponse>> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNull(response.getErrors());
+            assertEquals(10, response.getData().size());
+            assertEquals(0, response.getPaging().getCurrentPage());
+            assertEquals(2, response.getPaging().getTotalPage());
+            assertEquals(10, response.getPaging().getSize());
+        });
+
+        mockMvc.perform(
+                get("/api/orders/pageable/users/"+user.getId())
+                        .queryParam("page", "1")
+                        .queryParam("size", "10")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isOk()
+        ).andDo(result -> {
+            GenerateResponse<List<OrderResponse>> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNull(response.getErrors());
+            assertEquals(5, response.getData().size());
+            assertEquals(1, response.getPaging().getCurrentPage());
+            assertEquals(2, response.getPaging().getTotalPage());
+            assertEquals(10, response.getPaging().getSize());
         });
     }
 }

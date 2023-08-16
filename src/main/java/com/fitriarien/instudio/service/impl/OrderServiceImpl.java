@@ -9,6 +9,11 @@ import com.fitriarien.instudio.repository.UserRepository;
 import com.fitriarien.instudio.service.OrderService;
 import com.fitriarien.instudio.service.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -117,6 +123,30 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return orderResponses;
+    }
+
+    @Override
+    public Page<OrderResponse> getOrdersByPage(String userId, int page, int size) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (user.getStatus() == 0) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have permission to create product.");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Order> orders = orderRepository.findAll(pageable);
+
+        if (orders.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Data not found");
+        }
+
+        List<OrderResponse> orderResponses = orders.getContent().stream()
+                .map(this::toOrderResponse)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(orderResponses, pageable, orders.getTotalElements());
+
     }
 
     private String handleOrderCode() {
