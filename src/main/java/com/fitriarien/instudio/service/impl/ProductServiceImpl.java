@@ -153,7 +153,7 @@ public class ProductServiceImpl implements ProductService {
         return new PageImpl<>(responseList, pageable, products.getTotalElements());
     }
 
-    private ProductResponse toProductResponse(Product product) {
+    protected ProductResponse toProductResponse(Product product) {
         return ProductResponse.builder()
                 .productId(product.getProductId())
                 .productName(product.getProductName())

@@ -103,6 +103,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OrderResponse> getOrders(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -126,6 +127,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<OrderResponse> getOrdersByPage(String userId, int page, int size) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -159,7 +161,7 @@ public class OrderServiceImpl implements OrderService {
         return formatter.format(currentDateTime);
     }
 
-    private OrderResponse toOrderResponse(Order order) {
+    protected OrderResponse toOrderResponse(Order order) {
         return OrderResponse.builder()
                 .orderId(order.getOrderId())
                 .orderCode(order.getOrderCode())
