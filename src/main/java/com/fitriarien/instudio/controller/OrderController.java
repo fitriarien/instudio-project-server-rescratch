@@ -46,4 +46,13 @@ public class OrderController {
         OrderResponse orderResponse = orderService.get(userId, orderId);
         return GenerateResponse.<OrderResponse>builder().data(orderResponse).build();
     }
+
+    @GetMapping(
+            path = "/api/orders/all/users/{userId}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public GenerateResponse<List<OrderResponse>> getOrders(@PathVariable("userId") String userId) {
+        List<OrderResponse> orderResponses = orderService.getOrders(userId);
+        return GenerateResponse.<List<OrderResponse>>builder().data(orderResponses).build();
+    }
 }

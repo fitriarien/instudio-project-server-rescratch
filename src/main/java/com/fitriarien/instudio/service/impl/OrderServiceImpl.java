@@ -96,6 +96,29 @@ public class OrderServiceImpl implements OrderService {
         return toOrderResponse(order);
     }
 
+    @Override
+    public List<OrderResponse> getOrders(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (user.getStatus() == 0) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have permission to create product.");
+        }
+
+        List<Order> orders = orderRepository.findAll();
+        if (orders.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Data not found");
+        }
+
+        List<OrderResponse> orderResponses = new ArrayList<>();
+        for (Order order : orders) {
+            OrderResponse orderResponse = toOrderResponse(order);
+            orderResponses.add(orderResponse);
+        }
+
+        return orderResponses;
+    }
+
     private String handleOrderCode() {
         return "TR" + (orderRepository.getMaxOrder()+1);
     }

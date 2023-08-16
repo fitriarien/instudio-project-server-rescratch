@@ -445,4 +445,97 @@ class OrderControllerTest {
             assertEquals(order.getOrderStatus(), response.getData().getOrderStatus());
         });
     }
+
+    @Test
+    void testGetAllOrdersNotFoundUser() throws Exception {
+        UserDetails userDetails = authService.loadUserByUsername("person1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+
+        mockMvc.perform(
+                get("/api/orders/all/users/wrongId")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isNotFound()
+        ).andDo(result -> {
+            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNotNull(responses.getErrors());
+        });
+    }
+
+    @Test
+    void testGetAllOrdersForbiddenUser() throws Exception {
+        UserDetails userDetails = authService.loadUserByUsername("admin1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+        User user = userRepository.findByUsername("admin1");
+
+        mockMvc.perform(
+                get("/api/orders/all/users/"+user.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isForbidden()
+        ).andDo(result -> {
+            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNotNull(responses.getErrors());
+        });
+    }
+
+    @Test
+    void testGetAllOrdersEmpty() throws Exception {
+        UserDetails userDetails = authService.loadUserByUsername("person1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+        User user = userRepository.findByUsername("person1");
+
+        mockMvc.perform(
+                get("/api/orders/all/users/"+user.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isNoContent()
+        ).andDo(result -> {
+            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNotNull(responses.getErrors());
+        });
+    }
+
+    @Test
+    void testGetAllOrdersSuccess() throws Exception {
+        UserDetails userDetails = authService.loadUserByUsername("person1");
+        String token = jwtTokenUtil.generateToken(userDetails);
+        User user = userRepository.findByUsername("person1");
+
+        for (int i = 0; i < 10; i++) {
+            Order order = new Order();
+            order.setOrderId(UUID.randomUUID().toString());
+            order.setOrderCode("TR" + (i+1));
+            order.setOrderDate("2023-06-23 18:32:30");
+            order.setVisitSchedule("2023-07-02 10:00:00");
+            order.setVisitAddress("Jakarta");
+            order.setOrderAmount(0D);
+            order.setOrderStatus(0L);
+            order.setUser(user);
+            orderRepository.save(order);
+        }
+
+        mockMvc.perform(
+                get("/api/orders/all/users/"+user.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        ).andExpect(
+                status().isOk()
+        ).andDo(result -> {
+            GenerateResponse<List<OrderResponse>> responses = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNull(responses.getErrors());
+            assertEquals(10, responses.getData().size());
+        });
+    }
 }
