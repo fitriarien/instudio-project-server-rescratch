@@ -1,5 +1,6 @@
 package com.fitriarien.instudio.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,11 +40,14 @@ public class User {
     private Long status;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Product> products;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Image> images;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Order> orderList;
 }

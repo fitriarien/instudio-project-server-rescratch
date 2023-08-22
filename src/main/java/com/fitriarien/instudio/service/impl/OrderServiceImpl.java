@@ -171,6 +171,7 @@ public class OrderServiceImpl implements OrderService {
                 .orderAmount(order.getOrderAmount())
                 .orderStatus(order.getOrderStatus())
                 .orderDetailList(order.getOrderDetailList())
+                .paymentList(order.getPaymentList())
                 .build();
     }
 }
